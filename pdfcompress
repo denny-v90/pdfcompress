@@ -1,0 +1,60 @@
+#!/bin/bash
+
+DIR="./"
+OUTPUT="./compressed"
+
+while [ $# -gt 0 ]; do
+	case $1 in
+		-f | --file)
+			shift
+			FILE=$1
+			;;
+		-h | --help)
+            # It gets right path of script; then print help file
+            cat $(dirname $(readlink -f $0))/doc/help
+            exit 0
+            ;;
+		-o | --output-directory)
+			shift
+			OUTPUT=$1
+			;;
+        -p | --path)
+            shift
+            DIR=$1
+            ;;
+	esac
+	shift
+done
+
+if ! [ -z "$FILE" ]; then
+	echo "I'll compress this file ($FILE) inside $DIR"
+
+	# add <filename> into array ELEMENTS
+	readarray ELEMENTS < <(ls -1 "${DIR}"/"$FILE" 2> /dev/null)
+else
+	echo "I'll compress all PDF files inside $DIR"
+	
+	# add PDF <filenames> founded in path into array ELEMENTS
+	readarray ELEMENTS < <(ls -1 "${DIR}"/*.pdf 2> /dev/null)
+fi
+
+echo -e "I've found ${#ELEMENTS[*]} PDF files to convert\n"
+if [ ${#ELEMENTS[*]} -gt 0 ]; then
+
+	# create directory output or nested directory output and set permissions
+	if ! [ -d "$OUTPUT" ]; then mkdir -p "$OUTPUT"; fi
+	if ! [ -w "$OUTPUT" ]; then chmod u+x "$OUTPUT"; fi
+
+	# for each <filename> that I'm parsing, I delete final \n before processes it
+	for index in ${!ELEMENTS[@]} ; do
+		pdf2ps "$(echo ${ELEMENTS[$index]} | tr -d '\n')" "$OUTPUT"/"$(basename "${ELEMENTS[$index]/.pdf}").ps"
+		ps2pdf -dSETTINGS=/ebook "$OUTPUT"/"$(basename "${ELEMENTS[$index]/.pdf}").ps" "$OUTPUT"/"$(basename "${ELEMENTS[$index]}")"
+		rm "$OUTPUT"/"$(basename "${ELEMENTS[$index]/.pdf}").ps"
+	done
+
+else
+	echo -e "Sorry, PDF files not found in this directory\n"
+fi
+
+echo "Done!"
+exit 0

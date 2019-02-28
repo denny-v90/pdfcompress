@@ -1,0 +1,7 @@
+Usage: ./pdfcompress [OPTION]...
+Compress all PDF files found from current directory (default) or in a specific path passed as argument
+
+  -f , --file			Set file to compress
+  -o, --output-directory	Use the directory as output folder
+  -p, --path			Set the directory to search PDF files
+  -h, --help			Show this help and exit
